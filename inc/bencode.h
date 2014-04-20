@@ -8,6 +8,7 @@ typedef enum {
   B_DICT
 } b_type;
 
+typedef long long b_size;
 struct b_encode;
 
 typedef struct b_list{
@@ -16,21 +17,24 @@ typedef struct b_list{
 } b_list;
 
 typedef struct b_dict{
-  char *key;
+  char* key;
   struct b_encode* value;
   struct b_dict* next;
 } b_dict;
 
 typedef struct {
   b_type type;
+  char* begin;
+  int len;
   union {
-    unsigned long long iv;
+    b_size iv;
     char* cpv;
     b_list* lpv;
     b_dict* dpv;
   } data;
 } b_encode;
 
-b_encode* b_encode_init(char *content);
+b_encode* b_encode_init(char* file_name);
+void b_encode_free(b_encode* encode);
 
 #endif /* end of include guard: _BENCODE_H_ */
