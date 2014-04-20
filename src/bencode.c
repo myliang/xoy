@@ -30,7 +30,9 @@ b_encode* b_encode_init (char* file_name) {
   if(NULL == buf) {
     return NULL;
   }
+  b_encode* be = parse(buf);
   b_buffer_free(buf);
+  return be;
 }
 
 void b_encode_free (b_encode* encode) {
