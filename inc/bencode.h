@@ -22,7 +22,7 @@ typedef struct b_dict{
   struct b_dict* next;
 } b_dict;
 
-typedef struct {
+typedef struct b_encode{
   b_type type;
   char* begin;
   int len;

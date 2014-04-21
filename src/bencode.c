@@ -51,9 +51,9 @@ static b_encode* parse_int(b_buffer* buf) {
 }
 static b_encode* parse_string(b_buffer* buf) {
   b_size len = b_buffer_read_int(buf);
-  b_encode* be = b_encode_malloc(B_STRING, buf->index++, len);
+  b_encode* be = b_encode_malloc(B_STRING, buf->index, buf->index + len);
   be->data.cpv = malloc(len + 1);
-  memcpy(be->data.cpv, buf->index, len);
+  memcpy(be->data.cpv, ++buf->index, len);
   be->data.cpv[len] = '\0';
   return be;
 }
