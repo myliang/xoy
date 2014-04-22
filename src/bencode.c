@@ -23,9 +23,12 @@ static b_encode* parse_string(b_buffer* buf);
 static b_encode* parse_list(b_buffer* buf);
 static b_encode* parse_dict(b_buffer* buf);
 static b_encode* parse(b_buffer* buf);
-static b_encode* b_encode_malloc();
+static b_encode* b_encode_malloc(b_type type, char* begin, char* end);
 
-b_encode* b_encode_init (char* file_name) {
+static void b_encode_print_level(b_encode* bp, int level);
+static void print_blanks(int cnt);
+
+b_encode* b_encode_init (const char* file_name) {
   b_buffer* buf = b_buffer_init(file_name);
   if(NULL == buf) {
     return NULL;
@@ -35,7 +38,53 @@ b_encode* b_encode_init (char* file_name) {
   return be;
 }
 
-void b_encode_free (b_encode* encode) {
+void b_encode_print (b_encode* bp) {
+  b_encode_print_level(bp, 0);
+}
+
+static void b_encode_print_level (b_encode* bp, int level) {
+  if (NULL != bp) {
+    switch (bp->type) {
+      case B_INTEGER:
+        printf("%lld", bp->data.iv);
+        break;
+      case B_LIST:
+        {
+          b_list* bl = bp->data.lpv;
+          while (NULL != bl) {
+            printf(" ");
+            b_encode_print_level(bl->item, level);
+            printf(" ");
+            bl = bl->next;
+          }
+        }
+        break;
+      case B_DICT:
+        {
+          b_dict* bd = bp->data.dpv;
+          printf("{");
+          while (NULL != bd) {
+            printf("%s: ", bd->key);
+            b_encode_print_level(bd->value, level);
+            printf("\n");
+            bd = bd->next;
+          }
+          printf("}");
+        }
+        break;
+      default: printf("%s", bp->data.cpv);
+    }
+  }
+}
+
+static void print_blanks(int cnt){
+  int i = 0;
+  for (i = 0; i < cnt; i++) {
+    printf("  ");
+  }
+}
+
+void b_encode_free (b_encode* bp) {
   // if (NULL != encode) {
   //   free(encode);
   // }
@@ -47,14 +96,22 @@ static b_encode* parse_int(b_buffer* buf) {
   b_size value = b_buffer_read_int(buf);
   b_encode* be = b_encode_malloc(B_INTEGER, begin, buf->index++);
   be->data.iv = value;
+#ifdef DEBUG
+  printf("int => %ld\n", (long)value);
+#endif
   return be;
 }
 static b_encode* parse_string(b_buffer* buf) {
   b_size len = b_buffer_read_int(buf);
+  buf->index++;
   b_encode* be = b_encode_malloc(B_STRING, buf->index, buf->index + len);
   be->data.cpv = malloc(len + 1);
-  memcpy(be->data.cpv, ++buf->index, len);
+  memcpy(be->data.cpv, buf->index, len);
   be->data.cpv[len] = '\0';
+#ifdef DEBUG
+  printf("string => %d: %s\n", (int)len, be->data.cpv);
+#endif
+  buf->index += len;
   return be;
 }
 static b_encode* parse_list(b_buffer* buf) {
@@ -68,7 +125,7 @@ static b_encode* parse_list(b_buffer* buf) {
     bl->next = NULL;
   }
   buf->index++;
-  b_encode* be = b_encode_malloc(B_LIST, begin, buf->index - begin);
+  b_encode* be = b_encode_malloc(B_LIST, begin, buf->index);
   be->data.lpv = head.next;
   return be;
 }
@@ -86,7 +143,7 @@ static b_encode* parse_dict(b_buffer* buf) {
     bd->next = NULL;
   }
   buf->index++;
-  b_encode* be = b_encode_malloc(B_LIST, begin, buf->index - begin);
+  b_encode* be = b_encode_malloc(B_DICT, begin, buf->index);
   be->data.dpv = head.next;
   return be;
 }
@@ -138,7 +195,7 @@ static b_buffer* b_buffer_init (const char* file_name) {
 
 #ifdef DEBUG
   printf("the head char is %c , the index char is %c, the tail char is %c\n", *buf->head, *buf->index, *buf->tail);
-  printf("the size of the %s file is %ld\n", file_name, buf->len);
+  printf("the size of the %s file is %ld\n", file_name, (long)buf->len);
   printf("the content of the %s file is %s\n", file_name, buf->head);
 #endif
 
