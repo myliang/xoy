@@ -1,0 +1,35 @@
+#ifndef _TORRENT_H_
+#define _TORRENT_H_
+
+#include "../inc/bencode.h"
+
+typedef long long torrent_size;
+
+typedef struct torrent_tracker{
+  char* url;
+  struct torrent_tracker* next;
+} torrent_tracker;
+
+typedef struct torrent_file{
+  torrent_size size;
+  char* name;
+  struct torrent_file* next;
+} torrent_file;
+
+typedef struct torrent{
+  char* name;
+  char* comment;
+  char* created_by;
+  char* encoding;
+  torrent_size create_date;
+  torrent_size piece_size;
+  unsigned char info_hash[20];
+  unsigned char peer_id[20];
+
+  torrent_tracker* tracker;
+  torrent_file* file;
+} torrent;
+
+torrent* torrent_init(b_encode* bp);
+
+#endif /* end of include guard: _TORRENT_H_ */
