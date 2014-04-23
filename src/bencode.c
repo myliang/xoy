@@ -50,12 +50,14 @@ static void b_encode_print_level (b_encode* bp, int level) {
       case B_LIST:
         {
           b_list* bl = bp->data.lpv;
+          printf("[");
           while (NULL != bl) {
             printf(" ");
             b_encode_print_level(bl->item, level);
             printf(" ");
             bl = bl->next;
           }
+          printf("]");
         }
         break;
       case B_DICT:
