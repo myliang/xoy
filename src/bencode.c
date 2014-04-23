@@ -26,7 +26,6 @@ static b_encode* parse(b_buffer* buf);
 static b_encode* b_encode_malloc(b_type type, char* begin, char* end);
 
 static void b_encode_print_level(b_encode* bp, int level);
-static void print_blanks(int cnt);
 
 b_encode* b_encode_init (const char* file_name) {
   b_buffer* buf = b_buffer_init(file_name);
@@ -74,13 +73,6 @@ static void b_encode_print_level (b_encode* bp, int level) {
         break;
       default: printf("%s", bp->data.cpv);
     }
-  }
-}
-
-static void print_blanks(int cnt){
-  int i = 0;
-  for (i = 0; i < cnt; i++) {
-    printf("  ");
   }
 }
 

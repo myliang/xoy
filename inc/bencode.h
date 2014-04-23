@@ -36,7 +36,7 @@ typedef struct b_encode{
 } b_encode;
 
 b_encode* b_encode_init(const char* file_name);
-void b_encode_print(b_encode* bp);
+void b_encode_print(b_encode* bp
 void b_encode_free(b_encode* bp);
 
 #endif /* end of include guard: _BENCODE_H_ */
