@@ -20,10 +20,16 @@ torrent* torrent_init (b_encode* bp) {
       torrent_tracker head;
       torrent_tracker* tp = &head;
       while(NULL != bl) {
-        b_list* bll = bl->item->data.lpv;
-        printf("%s\n", bll->item->data.cpv);
+        b_encode* bll = bl->item->data.lpv->item;
+        tp->next = malloc(sizeof(torrent_tracker));
+        tp = tp->next;
+        tp->url = malloc(sizeof(bll->len));
+        memcpy(tp->url, bll->data.cpv, bll->len);
+        tp->next = NULL;
+        printf("%s\n", bll->data.cpv);
         bl = bl->next;
       }
+      tt->tracker = head.next;
     }
     bd = bd->next;
   }
