@@ -33,7 +33,6 @@ b_encode* b_encode_init (const char* file_name) {
     return NULL;
   }
   b_encode* be = parse(buf);
-  b_buffer_free(buf);
   return be;
 }
 
@@ -82,6 +81,7 @@ void b_encode_free (b_encode* bp) {
   // if (NULL != encode) {
   //   free(encode);
   // }
+  // b_buffer_free(buf);
 }
 
 /****** the methods of b_encode int string list dict ******************/

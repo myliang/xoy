@@ -26,7 +26,7 @@ typedef struct b_dict{
 typedef struct b_encode{
   b_type type;
   char* begin;
-  int len;
+  unsigned int len;
   union {
     b_size iv;
     char* cpv;

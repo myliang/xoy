@@ -1,7 +1,8 @@
 INC_DIR=inc
 CC=gcc
 # CFLAGS=-I$(INC_DIR) -Wall -M
-CFLAGS=-Wall -g
+# CFLAGS=-Wall -g
+CFLAGS=
 
 SRC_DIR=src
 OBJ_DIR=obj

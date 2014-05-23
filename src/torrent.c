@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+
+#include "../inc/sha1.h"
 #include "../inc/torrent.h"
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
@@ -8,10 +10,16 @@
 
 static torrent_tracker* malloc_tracker(char* src, int len);
 static char* malloc_string(char* src, int len);
+static void _torrent_init(torrent* tt, b_encode* bp);
+static torrent_file* malloc_file(char* str, int strlen, torrent_size file_size);
 
-torrent* torrent_init (b_encode* bp) {
-  if(NULL == bp) return NULL;
+torrent* torrent_init(b_encode* bp) {
   torrent* tt = malloc(sizeof(torrent));
+  _torrent_init(tt, bp);
+  return tt;
+}
+
+static void _torrent_init (torrent* tt, b_encode* bp) {
   b_dict* bd = bp->data.dpv;
   // printf("type=%d\n", bp->type);
   while(NULL != bd) {
@@ -23,8 +31,7 @@ torrent* torrent_init (b_encode* bp) {
       torrent_tracker* tp = &head;
       while(NULL != bl) {
         b_encode* bll = bl->item->data.lpv->item;
-        tp->next = malloc_tracker(bll->data.cpv, bll->len);
-        tp = tp->next;
+        tp = tp->next = malloc_tracker(bll->data.cpv, bll->len);
         // printf("%s\n", tp->url);
         bl = bl->next;
       }
@@ -50,22 +57,41 @@ torrent* torrent_init (b_encode* bp) {
     if(strncmp("creation date", bd->key, max(key_len, 13)) == 0) {
       tt->create_date = bd->value->data.iv;
     }
-    if(strncmp("piece length", bd->key, max(key_len, 12)) == 0) {
+
+    if (strncmp("name", bd->key, max(key_len, 4)) == 0) {
+      tt->name = malloc_string(bd->value->data.cpv, bd->value->len);
+    } else if (strncmp("pieces", bd->key, max(key_len, 6)) == 0) {
+      tt->pieces = malloc_string(bd->value->data.cpv, bd->value->len);
+    } else if (strncmp("piece length", bd->key, max(key_len, 12)) == 0) {
       tt->piece_size = bd->value->data.iv;
-    }
-
-    if (strncmp("info", bd->key, max(key_len, 4)) == 0) {
-      b_dict* file = bd->value->data.dpv;
-      while (NULL != file) {
-        // file
+    } else if (strncmp("files", bd->key, max(key_len, 5)) == 0) {
+      b_list* list = bd->value->data.lpv;
+      torrent_file head;
+      torrent_file* tf = &head;
+      while (list) {
+        b_dict* ldict = list->item->data.dpv;
+        torrent_size size = ldict->value->data.iv;
+        b_encode* dnext = ldict->next->value;
+        tf = tf->next = malloc_file(dnext->data.cpv, dnext->len, size);
+        list = list->next;
       }
-
+    } else if (strncmp("info", bd->key, max(key_len, 4)) == 0) {
+      _torrent_init(tt, bd->value);
+      SHA1_CTX context;
+      SHA1Init(&context);
+      SHA1Update(&context, bd->value->begin, bd->value->len);
+      SHA1Final(tt->info_hash, &context);
     }
     bd = bd->next;
   }
-  return tt;
 }
 
+static torrent_file* malloc_file(char* str, int strlen, torrent_size file_size) {
+  torrent_file* tf = malloc(sizeof(torrent_file));
+  tf->size = file_size;
+  tf->name = malloc_string(str, strlen);
+  return tf;
+}
 static torrent_tracker* malloc_tracker(char* src, int len) {
   torrent_tracker* ttk = malloc(sizeof(torrent_tracker));
   ttk->next = NULL;
