@@ -16,7 +16,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) -c $(CFLAGS) $< -o $@
 
 $(TARGET): $(OBJS)
-	$(CC) $(OBJS) -o $(BIN_DIR)/$(TARGET)
+	$(CC) $(OBJS) -o $(BIN_DIR)/$(TARGET) -levent
 
 all:
 	@echo $(SRCS)

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "../inc/sha1.h"
 #include "../inc/torrent.h"
@@ -84,6 +85,10 @@ static void _torrent_init (torrent* tt, b_encode* bp) {
     }
     bd = bd->next;
   }
+
+  // set peer_id
+  srand(time(NULL));
+  sprintf(tt->peer_id, "-XOY1000-%11d", rand());
 }
 
 static torrent_file* malloc_file(char* str, int strlen, torrent_size file_size) {
