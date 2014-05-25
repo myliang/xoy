@@ -22,7 +22,7 @@ int main (int argc, const char* argv[]) {
 
   torrent* tt = torrent_init(bp);
 
-  http_get("http://www.baidu.com:80", http_get_callback);
+  http_get("http://www.baidu.com", http_get_callback);
   return 0;
 }
 
@@ -47,7 +47,8 @@ static void http_get(char* url, void(*func)(struct evhttp_request* req, void* ar
 
   char str_uri[256];
   const char* path = evhttp_uri_get_path(uri);
-  if(NULL == path) path = "/";
+  if(NULL == path || strcmp("", path) == 0) path = "/";
+
   const char* query = evhttp_uri_get_query(uri);
   if (NULL == query) {
     snprintf(str_uri, sizeof(str_uri) - 1, "%s", path);
@@ -57,7 +58,6 @@ static void http_get(char* url, void(*func)(struct evhttp_request* req, void* ar
   str_uri[sizeof(str_uri) - 1] = '\0';
 
   struct event_base* base = event_base_new();
-  // struct evbuffer* buffer = evbuffer_new();
   struct evhttp_connection* conn = evhttp_connection_base_new(base,
       NULL, host, port);
 
