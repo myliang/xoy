@@ -24,7 +24,7 @@ typedef struct torrent{
   char* pieces;
   torrent_size create_date;
   torrent_size piece_size;
-  unsigned char info_hash[20];
+  unsigned char info_hash[21];
   unsigned char peer_id[20];
 
   torrent_tracker* tracker;

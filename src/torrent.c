@@ -6,6 +6,8 @@
 #include "../inc/sha1.h"
 #include "../inc/torrent.h"
 
+#define DEBUG
+
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #define max(a, b) ((a) > (b) ? (a) : (b))
 
@@ -82,13 +84,22 @@ static void _torrent_init (torrent* tt, b_encode* bp) {
       SHA1Init(&context);
       SHA1Update(&context, (unsigned char*)&bd->value->begin[0], bd->value->len);
       SHA1Final(tt->info_hash, &context);
+      tt->info_hash[20] = '\0';
+
+#ifdef DEBUG
+      int i = 0;
+      for(i = 0; i < 20; i++) {
+        printf("%.2x", tt->info_hash[i]);
+      }
+      printf("\n");
+#endif
     }
     bd = bd->next;
   }
 
   // set peer_id
   srand(time(NULL));
-  sprintf(tt->peer_id, "-XOY1000-%11d", rand());
+  sprintf((char*)tt->peer_id, "-XOY1000-%11d", rand());
 }
 
 static torrent_file* malloc_file(char* str, int strlen, torrent_size file_size) {

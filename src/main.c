@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <event2/event.h>
@@ -22,8 +22,23 @@ int main (int argc, const char* argv[]) {
 
   torrent* tt = torrent_init(bp);
 
-  http_get("http://www.baidu.com", http_get_callback);
-  return 0;
+  torrent_tracker* tracker = tt->tracker;
+  while(NULL != tracker) {
+    char url[1024];
+    snprintf(url, sizeof(url) - 1, "%s?info_hash=%s&peer_id=%s&port=%d&uploaded=%d&downloaded=%d&left=%d&event=%s",
+        tt->tracker->url, evhttp_encode_uri((char*)tt->info_hash), evhttp_encode_uri((char*)tt->peer_id),
+        6881, 0, 0, 10, "started");
+    url[sizeof(url) - 1] = '\0';
+    printf("url=%s\n", url);
+    http_get(url, http_get_callback);
+    tracker = tracker->next;
+  }
+
+  // test
+  // char* t = malloc(10);
+  // memcpy(t, "abcbcd", 10);
+  // printf("%ld\n", sizeof(t));
+  // return 0;
 }
 
 static void http_get_callback(struct evhttp_request* req, void* arg) {
@@ -32,7 +47,13 @@ static void http_get_callback(struct evhttp_request* req, void* arg) {
   char buf[buffer_len + 1];
   evbuffer_remove(req->input_buffer, &buf, sizeof(buf) - 1);
   buf[buffer_len] = '\0';
-  printf("%s\n", buf);
+  printf("%ld, %s\n", sizeof(buf), buf);
+
+  b_encode* bp = b_encode_init_with_string(buf, buffer_len);
+  if(NULL == bp) {
+    printf("xxxxx\n");
+  }
+  b_encode_print(bp);
 }
 
 static void http_get(char* url, void(*func)(struct evhttp_request* req, void* arg)) {

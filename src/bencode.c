@@ -14,6 +14,7 @@ typedef struct {
 
 // b_buffer methods
 static b_buffer* b_buffer_init(const char* file_name);
+static b_buffer* b_buffer_init_with_string(const char* string, long len);
 static b_size b_buffer_read_int(b_buffer* buf);
 static void b_buffer_free(b_buffer* buf);
 
@@ -29,11 +30,13 @@ static void b_encode_print_level(b_encode* bp, int level);
 
 b_encode* b_encode_init (const char* file_name) {
   b_buffer* buf = b_buffer_init(file_name);
-  if(NULL == buf) {
-    return NULL;
-  }
-  b_encode* be = parse(buf);
-  return be;
+  if(NULL == buf) return NULL;
+  return parse(buf);
+}
+b_encode* b_encode_init_with_string (const char* string, long len) {
+  b_buffer* buf = b_buffer_init_with_string(string, len);
+  if(NULL == buf) return NULL;
+  return parse(buf);
 }
 
 void b_encode_print (b_encode* bp) {
@@ -158,6 +161,15 @@ static b_encode* b_encode_malloc(b_type type, char* begin, char* end) {
 }
 
 /****** the methods of b_buffer_init and b_buffer_free *****************/
+static b_buffer* b_buffer_init_with_string(const char* string, long len) {
+  b_buffer* buf = malloc(sizeof(b_buffer));
+  buf->head = buf->index = malloc(len + 1);
+  memcpy(buf->head, string, len);
+  buf->head[len] = '\0';
+  buf->len = len;
+  buf->tail = &buf->head[len - 1];
+  return buf;
+}
 static b_buffer* b_buffer_init (const char* file_name) {
   b_buffer* buf = malloc(sizeof(b_buffer));
 
