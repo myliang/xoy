@@ -2,6 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <unistd.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 #include <event2/event.h>
 #include <event2/http.h>
 #include <event2/buffer.h>
@@ -25,9 +30,10 @@ int main (int argc, const char* argv[]) {
   torrent_tracker* tracker = tt->tracker;
   while(NULL != tracker) {
     char url[1024];
-    snprintf(url, sizeof(url) - 1, "%s?info_hash=%s&peer_id=%s&port=%d&uploaded=%d&downloaded=%d&left=%d&event=%s",
+    snprintf(url, sizeof(url) - 1,
+        "%s?info_hash=%s&peer_id=%s&port=%d&uploaded=%d&downloaded=%d&left=%d&event=%s&numwant=%d",
         tt->tracker->url, evhttp_encode_uri((char*)tt->info_hash), evhttp_encode_uri((char*)tt->peer_id),
-        6881, 0, 0, 10, "started");
+        6881, 0, 0, 10240000, "started", 200);
     url[sizeof(url) - 1] = '\0';
     printf("url=%s\n", url);
     http_get(url, http_get_callback);
@@ -50,8 +56,30 @@ static void http_get_callback(struct evhttp_request* req, void* arg) {
   printf("%ld, %s\n", sizeof(buf), buf);
 
   b_encode* bp = b_encode_init_with_string(buf, buffer_len);
-  if(NULL == bp) {
-    printf("xxxxx\n");
+  b_dict* dict = bp->data.dpv;
+  while(NULL != dict) {
+    if (strcmp(dict->key,"peers") == 0) {
+      // peer_id have 6 bytes, ip have 4 bytes, port have 2 bytes
+      char* peers = dict->value->data.cpv;
+      int i;
+      for (i = 0; i < dict->value->len; i += 6) {
+        char peer_ip[4];
+        memcpy(peer_ip, &peers[i], 4);
+        long long ip = (peer_ip[0] << 24) + (peer_ip[1] << 16) + (peer_ip[2] << 8) + peer_ip[3];
+        char peer_port[2];
+        memcpy(peer_port, &peers[i + 4], 2);
+        int port = ((peer_port[0] << 8) & 0xffff) + peer_port[1];
+        char peer_ip_str[20];
+
+        struct in_addr s;  // IPv4地址结构体
+        s.s_addr = ip;
+        inet_ntop(AF_INET, (void*)&s, peer_ip_str, 16);
+        printf("peer_ip=%s, peer_port=%d\n", peer_ip_str, port);
+      }
+      printf("sizeof_peers=%d\n", dict->value->len);
+      break;
+    }
+    dict = dict->next;
   }
   b_encode_print(bp);
 }
