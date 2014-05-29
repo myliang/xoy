@@ -14,8 +14,11 @@
 
 #include "../inc/torrent.h"
 
-static void http_get(char* url, void(*func)(struct evhttp_request *req, void* arg));
+static void http_get(char* url, torrent* tt,
+    void(*func)(struct evhttp_request *req, void* arg));
 static void http_get_callback(struct evhttp_request *req, void* arg);
+
+static torrent* tt;
 
 int main (int argc, const char* argv[]) {
   int i ;
@@ -25,7 +28,7 @@ int main (int argc, const char* argv[]) {
   b_encode* bp = b_encode_init(argv[1]);
   b_encode_print(bp);
 
-  torrent* tt = torrent_init(bp);
+  tt = torrent_init(bp);
 
   torrent_tracker* tracker = tt->tracker;
   while(NULL != tracker) {
@@ -36,7 +39,7 @@ int main (int argc, const char* argv[]) {
         6881, 0, 0, 10240000, "started", 200);
     url[sizeof(url) - 1] = '\0';
     printf("url=%s\n", url);
-    http_get(url, http_get_callback);
+    http_get(url, tt, http_get_callback);
     tracker = tracker->next;
   }
 
@@ -54,6 +57,9 @@ static void http_get_callback(struct evhttp_request* req, void* arg) {
   evbuffer_remove(req->input_buffer, &buf, sizeof(buf) - 1);
   buf[buffer_len] = '\0';
   printf("%ld, %s\n", sizeof(buf), buf);
+
+  torrent* tt = (torrent*) arg;
+  printf("===%s\n", tt->name);
 
   b_encode* bp = b_encode_init_with_string(buf, buffer_len);
   b_dict* dict = bp->data.dpv;
@@ -84,7 +90,7 @@ static void http_get_callback(struct evhttp_request* req, void* arg) {
   b_encode_print(bp);
 }
 
-static void http_get(char* url, void(*func)(struct evhttp_request* req, void* arg)) {
+static void http_get(char* url, torrent* tt, void(*func)(struct evhttp_request* req, void* arg)) {
   struct evhttp_uri* uri = evhttp_uri_parse(url);
   const char* scheme = evhttp_uri_get_scheme(uri);
 
@@ -110,7 +116,7 @@ static void http_get(char* url, void(*func)(struct evhttp_request* req, void* ar
   struct evhttp_connection* conn = evhttp_connection_base_new(base,
       NULL, host, port);
 
-  struct evhttp_request* req = evhttp_request_new(func, base);
+  struct evhttp_request* req = evhttp_request_new(func, tt);
   evhttp_add_header(req->output_headers, "Host", host);
   printf("scheme=%s, host=%s, port=%d, uri=%s, query=%s, path=%s\n", scheme, host, port, str_uri, query, path);
   evhttp_make_request(conn, req, EVHTTP_REQ_GET, str_uri);

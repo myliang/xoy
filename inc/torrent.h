@@ -2,6 +2,7 @@
 #define _TORRENT_H_
 
 #include "../inc/bencode.h"
+#include "../inc/peer.h"
 
 typedef long long torrent_size;
 
@@ -29,6 +30,8 @@ typedef struct torrent{
 
   torrent_tracker* tracker;
   torrent_file* file;
+
+  peer* peer;
 } torrent;
 
 torrent* torrent_init(b_encode* bp);
