@@ -59,7 +59,14 @@ static void http_get_callback(struct evhttp_request* req, void* arg) {
   printf("%ld, %s\n", sizeof(buf), buf);
 
   torrent* tt = (torrent*) arg;
-  printf("===%s\n", tt->name);
+  peer* p = NULL;
+  if (NULL == tt->peer) {
+    peer head;
+    p = &head;
+    tt->peer = head.next;
+  } else {
+    p = tt->peer;
+  }
 
   b_encode* bp = b_encode_init_with_string(buf, buffer_len);
   b_dict* dict = bp->data.dpv;
@@ -69,20 +76,12 @@ static void http_get_callback(struct evhttp_request* req, void* arg) {
       char* peers = dict->value->data.cpv;
       int i;
       for (i = 0; i < dict->value->len; i += 6) {
-        char peer_ip[4];
-        memcpy(peer_ip, &peers[i], 4);
-        long long ip = (peer_ip[0] << 24) + (peer_ip[1] << 16) + (peer_ip[2] << 8) + peer_ip[3];
-        char peer_port[2];
-        memcpy(peer_port, &peers[i + 4], 2);
-        int port = ((peer_port[0] << 8) & 0xffff) + peer_port[1];
-        char peer_ip_str[20];
-
-        struct in_addr s;  // IPv4地址结构体
-        s.s_addr = ip;
-        inet_ntop(AF_INET, (void*)&s, peer_ip_str, 16);
-        printf("peer_ip=%s, peer_port=%d\n", peer_ip_str, port);
+        peer* cur = peer_init();
+        add_ip_port_topeer(cur, &peers[i]);
+        if (peer_contain(tt->peer, cur) == 0) {
+          p = p->next = cur;
+        } else peer_free(cur);
       }
-      printf("sizeof_peers=%d\n", dict->value->len);
       break;
     }
     dict = dict->next;

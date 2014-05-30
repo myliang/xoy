@@ -10,6 +10,8 @@ typedef struct peer{
 } peer;
 
 peer* peer_init();
-void add_ip_port_topeer(peer* ppt, const char* src);
+int peer_contain(peer* head, peer* cur);
+void add_ip_port_topeer(peer* cur, const char* src);
+void* peer_free(peer* p);
 
 #endif /* end of include guard: _PEER_H_ */
