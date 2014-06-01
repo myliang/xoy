@@ -26,7 +26,7 @@ int main (int argc, const char* argv[]) {
     printf("%s\n", argv[i]);
   }
   b_encode* bp = b_encode_init(argv[1]);
-  b_encode_print(bp);
+  // b_encode_print(bp);
 
   tt = torrent_init(bp);
 
@@ -51,12 +51,15 @@ int main (int argc, const char* argv[]) {
 }
 
 static void http_get_callback(struct evhttp_request* req, void* arg) {
+  if (NULL == req) return ;
   size_t buffer_len = evbuffer_get_length(req->input_buffer);
+  if(buffer_len <= 0) return ;
+
   printf("buffer_len=%ld\n", buffer_len);
   char buf[buffer_len + 1];
   evbuffer_remove(req->input_buffer, &buf, sizeof(buf) - 1);
   buf[buffer_len] = '\0';
-  printf("%ld, %s\n", sizeof(buf), buf);
+  // printf("%ld, %s\n", sizeof(buf), buf);
 
   torrent* tt = (torrent*) arg;
   peer* p = NULL;
@@ -75,6 +78,7 @@ static void http_get_callback(struct evhttp_request* req, void* arg) {
       // peer_id have 6 bytes, ip have 4 bytes, port have 2 bytes
       char* peers = dict->value->data.cpv;
       int i;
+      printf("%ld\n", dict->value->len);
       for (i = 0; i < dict->value->len; i += 6) {
         peer* cur = peer_init();
         add_ip_port_topeer(cur, &peers[i]);
@@ -86,7 +90,7 @@ static void http_get_callback(struct evhttp_request* req, void* arg) {
     }
     dict = dict->next;
   }
-  b_encode_print(bp);
+  // b_encode_print(bp);
 }
 
 static void http_get(char* url, torrent* tt, void(*func)(struct evhttp_request* req, void* arg)) {
@@ -117,7 +121,7 @@ static void http_get(char* url, torrent* tt, void(*func)(struct evhttp_request* 
 
   struct evhttp_request* req = evhttp_request_new(func, tt);
   evhttp_add_header(req->output_headers, "Host", host);
-  printf("scheme=%s, host=%s, port=%d, uri=%s, query=%s, path=%s\n", scheme, host, port, str_uri, query, path);
+  // printf("scheme=%s, host=%s, port=%d, uri=%s, query=%s, path=%s\n", scheme, host, port, str_uri, query, path);
   evhttp_make_request(conn, req, EVHTTP_REQ_GET, str_uri);
   evhttp_connection_set_timeout(req->evcon, 600);
   event_base_dispatch(base);

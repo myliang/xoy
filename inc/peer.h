@@ -6,6 +6,11 @@ typedef struct peer{
   char ip[20];
   unsigned int port;
 
+  int am_choking = 1;
+  int am_interested = 0;
+  int peer_choking = 1;
+  int peer_interested = 0;
+
   struct peer* next;
 } peer;
 
