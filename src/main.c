@@ -43,11 +43,11 @@ int main (int argc, const char* argv[]) {
     tracker = tracker->next;
   }
 
-  // test
-  // char* t = malloc(10);
-  // memcpy(t, "abcbcd", 10);
-  // printf("%ld\n", sizeof(t));
-  // return 0;
+  // send message with peer
+  xbt_peer* pr = tt->peer;
+  while (pr) {
+    pr = pr->next;
+  }
 }
 
 static void http_get_callback(struct evhttp_request* req, void* arg) {
@@ -62,13 +62,11 @@ static void http_get_callback(struct evhttp_request* req, void* arg) {
   // printf("%ld, %s\n", sizeof(buf), buf);
 
   torrent* tt = (torrent*) arg;
-  peer* p = NULL;
+  xbt_peer* p = tt->peer;
+  xbt_peer head;
   if (NULL == tt->peer) {
-    peer head;
+    head.next = NULL;
     p = &head;
-    tt->peer = head.next;
-  } else {
-    p = tt->peer;
   }
 
   b_encode* bp = b_encode_init_with_string(buf, buffer_len);
@@ -78,19 +76,22 @@ static void http_get_callback(struct evhttp_request* req, void* arg) {
       // peer_id have 6 bytes, ip have 4 bytes, port have 2 bytes
       char* peers = dict->value->data.cpv;
       int i;
-      printf("%ld\n", dict->value->len);
+      printf("%d\n", dict->value->len);
       for (i = 0; i < dict->value->len; i += 6) {
-        peer* cur = peer_init();
-        add_ip_port_topeer(cur, &peers[i]);
-        if (peer_contain(tt->peer, cur) == 0) {
+        xbt_peer* cur = xbt_peer_init();
+        xbt_peer_add_ip_port(cur, &peers[i]);
+        if (xbt_peer_contain(tt->peer, cur) == 0) {
           p = p->next = cur;
-        } else peer_free(cur);
+          if (NULL == tt->peer) {
+            tt->peer = head.next;
+          }
+        } else xbt_peer_free(cur);
       }
       break;
     }
     dict = dict->next;
   }
-  // b_encode_print(bp);
+
 }
 
 static void http_get(char* url, torrent* tt, void(*func)(struct evhttp_request* req, void* arg)) {

@@ -31,7 +31,7 @@ typedef struct torrent{
   torrent_tracker* tracker;
   torrent_file* file;
 
-  peer* peer;
+  xbt_peer* peer;
 } torrent;
 
 torrent* torrent_init(b_encode* bp);

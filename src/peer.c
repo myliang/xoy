@@ -6,16 +6,14 @@
 #include "../inc/peer.h"
 
 
-peer* peer_init () {
-  peer* p = malloc(sizeof(peer));
+xbt_peer* xbt_peer_init () {
+  xbt_peer* p = malloc(sizeof(xbt_peer));
   p->next = NULL;
   return p;
 }
 
-int peer_contain (peer* head, peer* cur) {
+int16_t xbt_peer_contain (xbt_peer* head, xbt_peer* cur) {
   while (NULL != head) {
-    printf(";;;;head.ip=%s, cur.ip=%s\n", head->ip, cur->ip);
-    printf("strcmp.ret=%d\n", strcmp(head->ip, cur->ip));
     if (strcmp(head->ip, cur->ip) == 0 && head->port == cur->port) {
       return 1;
     }
@@ -24,7 +22,7 @@ int peer_contain (peer* head, peer* cur) {
   return 0;
 }
 
-void add_ip_port_topeer (peer* cur, const char* src) {
+void xbt_peer_add_ip_port (xbt_peer* cur, const char* src) {
   int64_t ip = (src[0] << 24) + (src[1] << 16) + (src[2] << 8) + src[3];
   struct in_addr s;
   s.s_addr = ip;
@@ -33,6 +31,6 @@ void add_ip_port_topeer (peer* cur, const char* src) {
   printf("peer->ip = %s, peer->port = %d\n", cur->ip, cur->port);
 }
 
-void* peer_free(peer* p) {
+void* xbt_peer_free(xbt_peer* p) {
   free(p);
 }

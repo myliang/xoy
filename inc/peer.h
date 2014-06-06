@@ -1,22 +1,23 @@
 #ifndef _PEER_H_
 #define _PEER_H_
 
-typedef struct peer{
+typedef struct xbt_peer{
 
   char ip[20];
   unsigned int port;
 
-  int am_choking = 1;
-  int am_interested = 0;
-  int peer_choking = 1;
-  int peer_interested = 0;
+  // int16_t am_choking = 1;
+  // int16_t am_interested = 0;
+  // int16_t peer_choking = 1;
+  // int16_t peer_interested = 0;
 
-  struct peer* next;
-} peer;
+  struct xbt_peer* next;
 
-peer* peer_init();
-int peer_contain(peer* head, peer* cur);
-void add_ip_port_topeer(peer* cur, const char* src);
-void* peer_free(peer* p);
+} xbt_peer;
+
+xbt_peer* xbt_peer_init();
+int16_t xbt_peer_contain(xbt_peer* head, xbt_peer* cur);
+void xbt_peer_add_ip_port(xbt_peer* cur, const char* src);
+void* xbt_peer_free(xbt_peer* p);
 
 #endif /* end of include guard: _PEER_H_ */
