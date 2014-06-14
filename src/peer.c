@@ -34,3 +34,4 @@ void xbt_peer_add_ip_port (xbt_peer* cur, const char* src) {
 void* xbt_peer_free(xbt_peer* p) {
   free(p);
 }
+
