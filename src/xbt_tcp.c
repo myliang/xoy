@@ -18,15 +18,24 @@ static void ev_tcp_request(char* host, unsigned int port, void(*cb_read)(struct 
 
 static void xbt_tcp_handshake_read(struct bufferevent* be, void* arg);
 static void xbt_tcp_handshake_write(struct bufferevent* be, void* arg);
+static void xbt_tcp_handshake_error(struct bufferevent* be, short error, void* arg);
 
 
 void xbt_tcp_handshake(torrent* tp, xbt_peer* pp) {
-  ev_tcp_request(pp->ip, pp->port, xbt_tcp_handshake_read, xbt_tcp_handshake_write, NULL, tp);
+  ev_tcp_request(pp->ip, pp->port, xbt_tcp_handshake_read, xbt_tcp_handshake_write, xbt_tcp_handshake_error, tp);
 }
 static void xbt_tcp_handshake_read(struct bufferevent* be, void* arg) {
+  fprintf(stderr, "read\n");
+  struct evbuffer* input = bufferevent_get_input(be);
+  size_t buflen = evbuffer_get_length(input);
+  if (buflen <= 0) return ;
+  char buf[buflen];
+  evbuffer_remove(input, buf, sizeof(buf));
+  fprintf(stderr, "%s\n", buf);
 
 }
 static void xbt_tcp_handshake_write(struct bufferevent* be, void* arg) {
+  fprintf(stderr, "write\n");
   torrent* tp = arg;
   char handshake[68];
   memset(handshake, 0, 68);
@@ -39,6 +48,17 @@ static void xbt_tcp_handshake_write(struct bufferevent* be, void* arg) {
   struct evbuffer* output = bufferevent_get_output(be);
   evbuffer_add(output, handshake, sizeof(handshake));
 }
+static void xbt_tcp_handshake_error(struct bufferevent* be, short error, void* arg) {
+  fprintf(stderr, "error\n");
+  if (error & BEV_EVENT_EOF) {
+    fprintf(stderr, "connection has been closed");
+  } else if (error & BEV_EVENT_ERROR) {
+    fprintf(stderr, "check errno");
+  } else if (error & BEV_EVENT_TIMEOUT) {
+    fprintf(stderr, "must be a timeout event handle");
+  }
+}
+
 
 static void ev_tcp_request(char* host, unsigned int port, void(*cb_read)(struct bufferevent* be, void* arg),
     void(*cb_write)(struct bufferevent* be, void* arg),

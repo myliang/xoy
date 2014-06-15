@@ -13,6 +13,8 @@
 #include <event2/http_struct.h>
 
 #include "../inc/torrent.h"
+#include "../inc/xbt_tcp.h"
+
 
 static void http_get(char* url, torrent* tt,
     void(*func)(struct evhttp_request *req, void* arg));
@@ -44,9 +46,12 @@ int main (int argc, const char* argv[]) {
   }
 
   // send message with peer
-  xbt_peer* pr = tt->peer;
-  while (pr) {
-    pr = pr->next;
+  xbt_peer* pp = tt->peer;
+  while (pp) {
+    sleep(5);
+    fprintf(stderr, "send message start....");
+    xbt_tcp_handshake(tt, pp);
+    pp = pp->next;
   }
 }
 
