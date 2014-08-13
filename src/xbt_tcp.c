@@ -64,6 +64,7 @@ static void ev_tcp_request(char* host, unsigned int port, void(*cb_read)(struct 
     void(*cb_write)(struct bufferevent* be, void* arg),
     void(*cb_event)(struct bufferevent* be, short events, void* arg),
     void* arg) {
+  fprintf(stderr, "ip: %s, port: %d", host, port);
   struct event_base* ev_base_tcp = event_base_new();
   struct sockaddr_in addr;
   addr.sin_family = AF_INET;
@@ -73,4 +74,5 @@ static void ev_tcp_request(char* host, unsigned int port, void(*cb_read)(struct 
   bufferevent_setcb(be, cb_read, cb_write, cb_event, arg);
   bufferevent_socket_connect(be, (struct sockaddr*)&addr, sizeof(struct sockaddr_in));
   event_base_dispatch(ev_base_tcp);
+  event_base_free(ev_base_tcp);
 }

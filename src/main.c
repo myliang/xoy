@@ -58,9 +58,9 @@ int main (int argc, const char* argv[]) {
 static void http_get_callback(struct evhttp_request* req, void* arg) {
   if (NULL == req) return ;
   size_t buffer_len = evbuffer_get_length(req->input_buffer);
+  printf("buffer_len=%ld\n", buffer_len);
   if(buffer_len <= 0) return ;
 
-  printf("buffer_len=%ld\n", buffer_len);
   char buf[buffer_len + 1];
   evbuffer_remove(req->input_buffer, &buf, sizeof(buf) - 1);
   buf[buffer_len] = '\0';
